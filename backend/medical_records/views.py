@@ -7,6 +7,16 @@ class RegistroMedicoViewSet(viewsets.ModelViewSet):
     queryset = RegistroMedico.objects.all()
     serializer_class = RegistroMedicoSerializer
 
+    def get_queryset(self):
+        """
+        Filtra los registros médicos por el parámetro 'mascota' en la URL.
+        """
+        queryset = RegistroMedico.objects.select_related('mascota', 'veterinario').all()
+        mascota_id = self.request.query_params.get('mascota')
+        if mascota_id:
+            queryset = queryset.filter(mascota__id=mascota_id)
+        return queryset
+
 class VacunaViewSet(viewsets.ModelViewSet):
     queryset = Vacuna.objects.all()
     serializer_class = VacunaSerializer

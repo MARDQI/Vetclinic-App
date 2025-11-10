@@ -107,6 +107,39 @@ export default function Reportes() {
 
   const maxCitas = Math.max(...Object.values(citasPorMes), 1);
 
+  const handleExportReport = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No hay token disponible');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/reports/generar-reporte-pdf/`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al generar el reporte');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'reporte_veterinaria.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Error al exportar el reporte:', error);
+    }
+  };
+
   return (
     <div className="p-4 max-w-[2000px] mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -114,7 +147,9 @@ export default function Reportes() {
           <h2 className="text-2xl font-bold text-gray-800">Reportes</h2>
           <p className="text-gray-600 mt-1">Análisis y estadísticas</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
+        <button 
+          onClick={handleExportReport}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
           <Download size={20} />
           Exportar Reporte
         </button>

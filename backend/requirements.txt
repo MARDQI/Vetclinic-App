@@ -16,3 +16,4 @@ factory-boy
 pytest-django
 django-debug-toolbar
 Pillow
+reportlab

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, User, Calendar, CreditCard as Edit, Trash2, X, FileText } from 'lucide-react';
-import { Mascota, PetSex, Cliente } from '../types';
+import { Search, Plus, User, Calendar, CreditCard as Edit, Trash2, X, FileText, Stethoscope, Syringe, Loader2 } from 'lucide-react';
+import { Mascota, PetSex, Cliente, RegistroMedico, Vacuna } from '../types';
 
 export default function Mascotas() {
   const [mascotas, setMascotas] = useState<Mascota[]>([]);
@@ -21,6 +21,15 @@ export default function Mascotas() {
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [showClientesList, setShowClientesList] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+
+  // Estados para el modal de historial médico
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedPetForHistory, setSelectedPetForHistory] = useState<Mascota | null>(null);
+  const [medicalRecords, setMedicalRecords] = useState<RegistroMedico[]>([]);
+  const [vaccines, setVaccines] = useState<Vacuna[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
+
 
   // Funciones de validación
   const validateName = (name: string): boolean => {
@@ -260,6 +269,44 @@ export default function Mascotas() {
     return colors[especie] || 'bg-gray-100 text-gray-700';
   };
 
+  const handleViewHistory = async (mascota: Mascota) => {
+    setSelectedPetForHistory(mascota);
+    setShowHistoryModal(true);
+    setHistoryLoading(true);
+    setHistoryError('');
+    setMedicalRecords([]);
+    setVaccines([]);
+
+    try {
+      const token = localStorage.getItem('token');
+      // Fetch medical records
+      const recordsResponse = await fetch(`${import.meta.env.VITE_API_URL}/medical-records/registros-medicos/?mascota=${mascota.id}`, {
+        headers: { 'Authorization': `Token ${token}` },
+      });
+      if (!recordsResponse.ok) throw new Error('Error al cargar el historial médico.');
+      const recordsData = await recordsResponse.json();
+      setMedicalRecords(recordsData.results || []);
+
+      // Fetch vaccines
+      const vaccinesResponse = await fetch(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/?mascota=${mascota.id}`, {
+        headers: { 'Authorization': `Token ${token}` },
+      });
+      if (!vaccinesResponse.ok) throw new Error('Error al cargar las vacunas.');
+      const vaccinesData = await vaccinesResponse.json();
+      setVaccines(vaccinesData.results || []);
+
+    } catch (error) {
+      if (error instanceof Error) {
+        setHistoryError(error.message);
+      } else {
+        setHistoryError('Ocurrió un error desconocido.');
+      }
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+
   return (
     <div className="p-4 max-w-[2000px] mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -345,7 +392,9 @@ export default function Mascotas() {
               </div>
             </div>
 
-            <button className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition-colors text-sm font-medium">
+            <button 
+              onClick={() => handleViewHistory(mascota)}
+              className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition-colors text-sm font-medium">
               <FileText size={16} />
               Ver Historial Médico
             </button>
@@ -619,6 +668,94 @@ export default function Mascotas() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showHistoryModal && selectedPetForHistory && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4 border-b pb-3">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">
+                  Historial Médico de <span className="text-teal-600">{selectedPetForHistory.nombre}</span>
+                </h3>
+                <p className="text-sm text-gray-500">Propietario: {selectedPetForHistory.propietario_nombre}</p>
+              </div>
+              <button onClick={() => setShowHistoryModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1">
+              {historyLoading ? (
+                <div className="flex justify-center items-center h-48">
+                  <Loader2 className="animate-spin text-teal-600" size={40} />
+                </div>
+              ) : historyError ? (
+                <div className="text-center text-red-600 bg-red-50 p-4 rounded-lg">{historyError}</div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Sección de Registros Médicos */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Stethoscope size={20} />
+                      Consultas y Registros
+                    </h4>
+                    {medicalRecords.length > 0 ? (
+                      <div className="space-y-4">
+                        {medicalRecords.map(record => (
+                          <div key={record.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <p className="font-semibold text-gray-800">Fecha: <span className="font-normal">{new Date(record.creado_en).toLocaleDateString('es-ES')}</span></p>
+                            <p className="font-semibold text-gray-800 mt-1">Veterinario: <span className="font-normal">{record.veterinario_nombre || 'No especificado'}</span></p>
+                            <p className="font-semibold text-gray-800 mt-2">Síntomas:</p>
+                            <p className="text-gray-600 whitespace-pre-wrap">{record.sintomas}</p>
+                            <p className="font-semibold text-gray-800 mt-2">Diagnóstico:</p>
+                            <p className="text-gray-600 whitespace-pre-wrap">{record.diagnostico}</p>
+                            <p className="font-semibold text-gray-800 mt-2">Tratamiento:</p>
+                            <p className="text-gray-600 whitespace-pre-wrap">{record.tratamiento}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No hay registros médicos.</p>
+                    )}
+                  </div>
+
+                  {/* Sección de Vacunas */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Syringe size={20} />
+                      Vacunas
+                    </h4>
+                    {vaccines.length > 0 ? (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vacuna</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Aplicación</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Próxima Dosis</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {vaccines.map(vaccine => (
+                              <tr key={vaccine.id}>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{vaccine.nombre}</td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{new Date(vaccine.fecha_administracion).toLocaleDateString('es-ES')}</td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{vaccine.proxima_fecha ? new Date(vaccine.proxima_fecha).toLocaleDateString('es-ES') : 'N/A'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No hay vacunas registradas.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

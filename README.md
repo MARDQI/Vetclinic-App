@@ -1,9 +1,5 @@
 # Proyecto Vetclinic-App: Guía de Estudio para Desarrolladores Web
 
-¡Hola a todos! Soy su profesor de desarrollo web, y hoy vamos a sumergirnos en el proyecto Vetclinic-App. Esta aplicación es un excelente ejemplo de cómo se construye una aplicación web moderna, utilizando dos de los frameworks más potentes del mercado: **Django** para el backend y **React** para el frontend.
-
-A lo largo de esta guía, vamos a desglosar la arquitectura del proyecto, explorar los conceptos clave de cada framework y analizar cómo interactúan entre sí para crear una aplicación funcional y robusta. ¡Prepárense para aprender y no duden en hacer preguntas!
-
 ## Sumario
 
 1.  [Arquitectura del Proyecto: Cliente-Servidor](#arquitectura-del-proyecto-cliente-servidor)

@@ -4,7 +4,7 @@ from .models import Cita, AppointmentStatus
 from .serializers import CitaSerializer
 
 class CitaViewSet(viewsets.ModelViewSet):
-    queryset = Cita.objects.all()
+    queryset = Cita.objects.select_related('mascota', 'mascota__propietario', 'veterinario').all()
     serializer_class = CitaSerializer
 
     def partial_update(self, request, *args, **kwargs):

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PawPrint, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { setTokens } from '../utils/auth';
 
@@ -15,15 +15,39 @@ export default function Login({ onLogin }: LoginProps) {
 
   const [error, setError] = useState('');
   const [isEmail, setIsEmail] = useState(false); // false para empezar con nombre de usuario
+  const [isLocked, setIsLocked] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
+  // Efecto para countdown del bloqueo
+  useEffect(() => {
+    if (remainingSeconds > 0) {
+      const timer = setInterval(() => {
+        setRemainingSeconds(prev => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [remainingSeconds]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (isLocked) {
+      setError(`Cuenta bloqueada. Espera ${remainingSeconds} segundos.`);
+      return;
+    }
 
     // Validación del correo electrónico si estamos en modo email
     if (isEmail && !validateEmail(formData.identifier)) {
@@ -73,21 +97,29 @@ export default function Login({ onLogin }: LoginProps) {
         onLogin();
       } else {
         const errorData = await response.json();
-        switch (response.status) {
-          case 400:
-            setError(errorData.error || 'Por favor, complete todos los campos correctamente');
-            break;
-          case 401:
-            setError('Las credenciales ingresadas son incorrectas');
-            break;
-          case 403:
-            setError('Su cuenta ha sido desactivada');
-            break;
-          case 429:
-            setError('Demasiados intentos fallidos. Por favor, espere unos minutos');
-            break;
-          default:
-            setError('Error al iniciar sesión. Inténtelo de nuevo');
+        
+        // Manejar bloqueo por intentos fallidos
+        if (response.status === 429 && errorData.locked) {
+          setIsLocked(true);
+          setRemainingSeconds(errorData.remaining_seconds || 10);
+          setError(errorData.error || 'Cuenta bloqueada temporalmente');
+        } else {
+          switch (response.status) {
+            case 400:
+              setError(errorData.error || 'Por favor, complete todos los campos correctamente');
+              break;
+            case 401:
+              setError('Las credenciales ingresadas son incorrectas');
+              break;
+            case 403:
+              setError('Su cuenta ha sido desactivada');
+              break;
+            case 429:
+              setError(errorData.error || 'Demasiados intentos fallidos. Por favor, espere unos minutos');
+              break;
+            default:
+              setError('Error al iniciar sesión. Inténtelo de nuevo');
+          }
         }
       }
     } catch (error) {
@@ -115,8 +147,17 @@ export default function Login({ onLogin }: LoginProps) {
             <p className="text-gray-600 mb-6">Ingresa tus credenciales para acceder</p>
 
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+              <div className={`border px-4 py-3 rounded-lg relative mb-4 ${
+                isLocked 
+                  ? 'bg-orange-100 border-orange-400 text-orange-700' 
+                  : 'bg-red-100 border-red-400 text-red-700'
+              }`} role="alert">
                 <span className="block sm:inline">{error}</span>
+                {isLocked && remainingSeconds > 0 && (
+                  <div className="mt-2 font-semibold">
+                    Espera {remainingSeconds} segundo{remainingSeconds !== 1 ? 's' : ''} para intentar nuevamente.
+                  </div>
+                )}
               </div>
             )}
 
@@ -201,9 +242,14 @@ export default function Login({ onLogin }: LoginProps) {
 
               <button
                 type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-md hover:shadow-lg"
+                disabled={isLocked}
+                className={`w-full font-semibold py-3 rounded-lg transition-colors shadow-md ${
+                  isLocked 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-teal-600 hover:bg-teal-700 hover:shadow-lg'
+                } text-white`}
               >
-                Iniciar Sesión
+                {isLocked ? `Espera ${remainingSeconds}s` : 'Iniciar Sesión'}
               </button>
             </form>
 

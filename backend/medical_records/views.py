@@ -18,7 +18,7 @@ class RegistroMedicoViewSet(viewsets.ModelViewSet):
         return queryset
 
 class VacunaViewSet(viewsets.ModelViewSet):
-    queryset = Vacuna.objects.all()
+    queryset = Vacuna.objects.select_related('registro_medico', 'registro_medico__mascota').all()
     serializer_class = VacunaSerializer
 
     def create(self, request, *args, **kwargs):

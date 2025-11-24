@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Users, LogOut, Plus, X, Edit, Trash2, Mail, PawPrint } from 'lucide-react';
+import { Users, LogOut, Plus, X, Edit, Trash2, Mail, PawPrint, FileText } from 'lucide-react';
 import { authenticatedFetch, clearTokens } from '../utils/auth';
+import AuditLogs from './AuditLogs';
 
 // Ajustamos el tipo User para que coincida con el serializador
 type User = {
@@ -22,6 +23,7 @@ export default function Admin() {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<{ nombre: string; rol: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'users' | 'logs'>('users');
   const [formData, setFormData] = useState({
     username: '',
     first_name: '',
@@ -181,7 +183,11 @@ export default function Admin() {
         fetchUsers(); // Recargar la lista de usuarios
         handleCloseModal();
       } else {
-        setError(JSON.stringify(data));
+        // Extraer el primer mensaje de error de forma limpia
+        const errorMessage = typeof data === 'object' 
+          ? Object.values(data).flat()[0] 
+          : data;
+        setError(errorMessage || 'Error al procesar la solicitud');
       }
     } catch {
       setError('Error de conexión');
@@ -227,20 +233,55 @@ export default function Admin() {
           </button>
         </div>
       </header>
+
+      {/* Tabs */}
+      <div className="bg-white border-b">
+        <div className="px-16 max-w-[2000px] mx-auto">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium transition-colors ${
+                activeTab === 'users'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Users size={20} />
+              Usuarios
+            </button>
+            <button
+              onClick={() => setActiveTab('logs')}
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium transition-colors ${
+                activeTab === 'logs'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <FileText size={20} />
+              Logs de Auditoría
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="px-16 py-4 max-w-[2000px] mx-auto space-y-6">
-        <UserManagement 
-          users={paginatedUsers} 
-          onEdit={handleOpenModal} 
-          onDelete={handleDelete} 
-          onAdd={() => handleOpenModal(null)}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          roleFilter={roleFilter}
-          setRoleFilter={setRoleFilter}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+        {activeTab === 'users' ? (
+          <UserManagement 
+            users={paginatedUsers} 
+            onEdit={handleOpenModal} 
+            onDelete={handleDelete} 
+            onAdd={() => handleOpenModal(null)}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            roleFilter={roleFilter}
+            setRoleFilter={setRoleFilter}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        ) : (
+          <AuditLogs />
+        )}
       </div>
 
       {showModal && (

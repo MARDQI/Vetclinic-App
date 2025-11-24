@@ -4,7 +4,7 @@ from .serializers import MascotaSerializer
 
 class MascotaViewSet(viewsets.ModelViewSet):
     serializer_class = MascotaSerializer
-    queryset = Mascota.objects.all()
+    queryset = Mascota.objects.select_related('propietario').all()
 
     def get_queryset(self):
         queryset = super().get_queryset()

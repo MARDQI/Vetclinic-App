@@ -21,21 +21,6 @@ export default function Dashboard() {
           authenticatedFetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/`)
         ]);
 
-        // Verificar si alguna respuesta no es exitosa
-        const responses = [
-          { res: citasRes, name: 'citas' },
-          { res: clientesRes, name: 'clientes' },
-          { res: mascotasRes, name: 'mascotas' },
-          { res: inventarioRes, name: 'inventario' }
-        ];
-
-        for (const { res, name } of responses) {
-          if (!res.ok) {
-            throw new Error(`Error al cargar ${name}: ${res.status} ${res.statusText}`);
-          }
-        }
-
-        // Procesar las respuestas
         const [citasData, clientesData, mascotasData, inventarioData] = await Promise.all([
           citasRes.json(),
           clientesRes.json(),
@@ -43,10 +28,10 @@ export default function Dashboard() {
           inventarioRes.json()
         ]);
 
-        setCitas(citasData.results);
-        setClientes(clientesData.results);
-        setMascotas(mascotasData.results);
-        setInventario(inventarioData.results);
+        setCitas(citasData.results || []);
+        setClientes(clientesData.results || []);
+        setMascotas(mascotasData.results || []);
+        setInventario(inventarioData.results || []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setError(error instanceof Error ? error.message : 'Error al cargar los datos');

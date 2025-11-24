@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Calendar, Clock, Search, Filter, X, CheckCircle, XCircle } from 'lucide-react';
 import { Cita, AppointmentStatus, Cliente, Mascota, User } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 export default function Citas() {
   // Estados para la gestión de citas, clientes, mascotas y veterinarios
@@ -76,17 +77,7 @@ export default function Citas() {
   // Obtiene todas las citas del servidor
   const fetchCitas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No hay sesión activa');
-        return;
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/appointments/citas/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/appointments/citas/`);
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -107,12 +98,7 @@ export default function Citas() {
   // Obtiene todos los clientes para el autocompletado
   const fetchClientes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`);
       const data = await response.json();
       setClientes(data.results);
     } catch (error) {
@@ -127,12 +113,7 @@ export default function Citas() {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/?propietario=${clienteId}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/?propietario=${clienteId}`);
       const data = await response.json();
       setMascotasFiltradas(data.results);
     } catch (error) {
@@ -143,12 +124,7 @@ export default function Citas() {
   // Obtiene la lista de usuarios con rol de veterinario
   const fetchVeterinarios = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/accounts/users/?rol=VETERINARIO`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/accounts/users/?rol=VETERINARIO`);
       const data = await response.json();
       setVeterinarios(data.results);
     } catch (error) {
@@ -178,12 +154,7 @@ export default function Citas() {
         setSelectedCita(cita);
         
         // Primero obtenemos los detalles de la mascota para saber su propietario
-        const token = localStorage.getItem('token');
-        const mascotaResponse = await fetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/${cita.mascota}/`, {
-          headers: {
-            'Authorization': `Token ${token}`,
-          },
-        });
+        const mascotaResponse = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/${cita.mascota}/`);
         
         if (!mascotaResponse.ok) {
           throw new Error('Error al obtener detalles de la mascota');
@@ -287,7 +258,6 @@ export default function Citas() {
     const method = selectedCita ? 'PUT' : 'POST';
 
     try {
-      const token = localStorage.getItem('token');
       const body = {
         mascota: formData.mascota,
         veterinario: formData.veterinario,
@@ -297,11 +267,10 @@ export default function Citas() {
         notas: formData.notas,
       };
 
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(body),
       });
@@ -323,23 +292,16 @@ export default function Citas() {
   // Cambia el estado de una cita (Pendiente, Confirmada, etc.)
   const handleStatusChange = async (cita: Cita, newStatus: AppointmentStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No hay sesión activa');
-        return;
-      }
-
       console.log('Actualizando estado de cita:', {
         id: cita.id,
         oldStatus: cita.estado,
         newStatus: newStatus
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/appointments/citas/${cita.id}/`, {
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/appointments/citas/${cita.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify({ estado: newStatus }),
       });

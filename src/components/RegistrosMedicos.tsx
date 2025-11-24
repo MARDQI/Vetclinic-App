@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, FileText, Calendar, X, Syringe } from 'lucide-react';
 import { RegistroMedico, Vacuna, Mascota, User } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 export default function RegistrosMedicos() {
   const [registros, setRegistros] = useState<RegistroMedico[]>([]);
@@ -75,12 +76,7 @@ export default function RegistrosMedicos() {
 
   const fetchRegistros = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/medical-records/registros-medicos/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/medical-records/registros-medicos/`);
       const data = await response.json();
       if (data && Array.isArray(data.results)) {
         setRegistros(data.results.filter((r: RegistroMedico) => r));
@@ -92,17 +88,7 @@ export default function RegistrosMedicos() {
 
   const fetchVacunas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No hay token disponible');
-        return;
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/`);
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -125,12 +111,7 @@ export default function RegistrosMedicos() {
 
   const fetchMascotas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/`);
       const data = await response.json();
       if (data && Array.isArray(data.results)) {
         setMascotas(data.results.filter((m: Mascota) => m && m.nombre));
@@ -142,12 +123,7 @@ export default function RegistrosMedicos() {
 
   const fetchVeterinarios = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/accounts/users/?rol=VETERINARIO`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/accounts/users/?rol=VETERINARIO`);
       const data = await response.json();
       if (data && Array.isArray(data.results)) {
         setVeterinarios(data.results);
@@ -224,7 +200,6 @@ export default function RegistrosMedicos() {
     const method = selectedRegistro ? 'PUT' : 'POST';
 
     try {
-      const token = localStorage.getItem('token');
       const body = {
         mascota: formData.mascota,
         veterinario: formData.veterinario,
@@ -235,11 +210,10 @@ export default function RegistrosMedicos() {
         fecha_seguimiento: formData.fecha_seguimiento || ''
       };
 
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(body),
       });
@@ -306,12 +280,6 @@ export default function RegistrosMedicos() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No hay sesión activa. Por favor, inicie sesión nuevamente.');
-        return;
-      }
-
       const body = {
         mascota: vacunaData.mascota,
         nombre: vacunaData.nombre,
@@ -325,11 +293,10 @@ export default function RegistrosMedicos() {
         : `${import.meta.env.VITE_API_URL}/medical-records/vacunas/`;
       const method = selectedVacuna ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(body),
       });

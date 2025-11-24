@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Users, PawPrint, AlertCircle, TrendingUp, Clock } from 'lucide-react';
 import { AppointmentStatus, Cita, Cliente, Mascota, ArticuloInventario } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 export default function Dashboard() {
   const [citas, setCitas] = useState<Cita[]>([]);
@@ -13,21 +14,11 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('No hay sesión activa');
-          return;
-        }
-
-        const headers = {
-          'Authorization': `Token ${token}`
-        };
-
         const [citasRes, clientesRes, mascotasRes, inventarioRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL}/appointments/citas/`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/`, { headers })
+          authenticatedFetch(`${import.meta.env.VITE_API_URL}/appointments/citas/`),
+          authenticatedFetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`),
+          authenticatedFetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/`),
+          authenticatedFetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/`)
         ]);
 
         // Verificar si alguna respuesta no es exitosa

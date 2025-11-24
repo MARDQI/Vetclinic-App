@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, User, Calendar, CreditCard as Edit, Trash2, X, FileText, Stethoscope, Syringe, Loader2 } from 'lucide-react';
 import { Mascota, PetSex, Cliente, RegistroMedico, Vacuna } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 export default function Mascotas() {
   const [mascotas, setMascotas] = useState<Mascota[]>([]);
@@ -73,12 +74,7 @@ export default function Mascotas() {
 
   const fetchMascotas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/`);
       const data = await response.json();
       setMascotas(data.results);
     } catch (error) {
@@ -88,12 +84,7 @@ export default function Mascotas() {
 
   const fetchClientes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`);
       const data = await response.json();
       setClientes(data.results);
     } catch (error) {
@@ -188,12 +179,10 @@ export default function Mascotas() {
     const method = selectedMascota ? 'PUT' : 'POST';
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -228,12 +217,8 @@ export default function Mascotas() {
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta mascota?')) {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/${id}/`, {
+        const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/pets/mascotas/${id}/`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Token ${token}`,
-          },
         });
 
         if (response.ok) {
@@ -278,19 +263,14 @@ export default function Mascotas() {
     setVaccines([]);
 
     try {
-      const token = localStorage.getItem('token');
       // Fetch medical records
-      const recordsResponse = await fetch(`${import.meta.env.VITE_API_URL}/medical-records/registros-medicos/?mascota=${mascota.id}`, {
-        headers: { 'Authorization': `Token ${token}` },
-      });
+      const recordsResponse = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/medical-records/registros-medicos/?mascota=${mascota.id}`);
       if (!recordsResponse.ok) throw new Error('Error al cargar el historial médico.');
       const recordsData = await recordsResponse.json();
       setMedicalRecords(recordsData.results || []);
 
       // Fetch vaccines
-      const vaccinesResponse = await fetch(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/?mascota=${mascota.id}`, {
-        headers: { 'Authorization': `Token ${token}` },
-      });
+      const vaccinesResponse = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/?mascota=${mascota.id}`);
       if (!vaccinesResponse.ok) throw new Error('Error al cargar las vacunas.');
       const vaccinesData = await vaccinesResponse.json();
       setVaccines(vaccinesData.results || []);

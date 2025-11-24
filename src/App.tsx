@@ -9,12 +9,13 @@ import Inventario from './components/Inventario';
 import Reportes from './components/Reportes';
 import Login from './components/Login';
 import Admin from './components/Admin';
+import { getAccessToken } from './utils/auth';
 
 type Page = 'dashboard' | 'clientes' | 'mascotas' | 'citas' | 'registros' | 'inventario' | 'reportes' | 'login' | 'admin';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [isAuthenticated, setIsAuthenticated] = useState(!!getAccessToken());
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,7 +55,8 @@ function App() {
 
   const handleNavigate = (page: string) => {
     if (page === 'login') {
-      localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       setIsAuthenticated(false);
       setCurrentPage('login');

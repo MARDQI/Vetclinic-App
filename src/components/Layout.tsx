@@ -1,5 +1,6 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Menu, X, Calendar, Users, PawPrint, FileText, Package, BarChart3, Home, LogOut } from 'lucide-react';
+import { clearTokens } from '../utils/auth';
 
 interface LayoutProps {
   children: ReactNode;
@@ -71,8 +72,7 @@ export default function Layout({ children, currentPage, onNavigate, userRole }: 
             </div>
             <button
               onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                clearTokens();
                 onNavigate('login');
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Mail, Phone, MapPin, CreditCard as Edit, Trash2, X } from 'lucide-react';
 import { Cliente } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 export default function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -45,12 +46,7 @@ export default function Clientes() {
 
   const fetchClientes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/clients/clientes/`);
       const data = await response.json();
       setClientes(data.results);
     } catch (error) {
@@ -146,17 +142,10 @@ export default function Clientes() {
       : `${import.meta.env.VITE_API_URL}/clients/clientes/`;
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No hay sesión activa');
-        return;
-      }
-
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -195,12 +184,8 @@ export default function Clientes() {
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/clients/clientes/${id}/`, {
+        const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/clients/clientes/${id}/`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Token ${token}`,
-          },
         });
 
         if (response.status === 204) {

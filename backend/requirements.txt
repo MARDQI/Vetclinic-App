@@ -6,6 +6,7 @@ crispy-bootstrap4
 crispy-bootstrap5
 django-filter
 djangorestframework
+djangorestframework-simplejwt
 markdown
 django-environ
 drf-yasg

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PawPrint, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { setTokens } from '../utils/auth';
 
 interface LoginProps {
   onLogin: () => void;
@@ -57,7 +58,10 @@ export default function Login({ onLogin }: LoginProps) {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('token', data.token);
+        
+        // Guardar tokens JWT
+        setTokens(data.access, data.refresh);
+        
         // Determinar el rol basado en el nombre de usuario (temporal)
         const rol = data.user.username === 'admin' ? 'Administrador' : 'Usuario';
         

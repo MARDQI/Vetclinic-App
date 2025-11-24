@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, Calendar, PawPrint, TrendingUp, Download } from 'lucide-react';
 import { Cita, Mascota, Vacuna, AppointmentStatus } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 interface PaginatedResponse<T> {
   count: number;
@@ -9,14 +10,12 @@ interface PaginatedResponse<T> {
   results: T[];
 }
 
-const fetchAllPages = async <T,>(url: string, token: string): Promise<T[]> => {
+const fetchAllPages = async <T,>(url: string): Promise<T[]> => {
   let results: T[] = [];
   let nextUrl: string | null = url;
 
   while (nextUrl) {
-    const response: Response = await fetch(nextUrl, {
-      headers: { 'Authorization': `Token ${token}` }
-    });
+    const response: Response = await authenticatedFetch(nextUrl);
 
     if (!response.ok) {
       console.error(`Error fetching ${nextUrl}:`, await response.text());
@@ -38,16 +37,10 @@ export default function Reportes() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No hay token disponible');
-          return;
-        }
-
         const [citasData, mascotasData, vacunasData] = await Promise.all([
-          fetchAllPages<Cita>(`${import.meta.env.VITE_API_URL}/appointments/citas/`, token),
-          fetchAllPages<Mascota>(`${import.meta.env.VITE_API_URL}/pets/mascotas/`, token),
-          fetchAllPages<Vacuna>(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/`, token),
+          fetchAllPages<Cita>(`${import.meta.env.VITE_API_URL}/appointments/citas/`),
+          fetchAllPages<Mascota>(`${import.meta.env.VITE_API_URL}/pets/mascotas/`),
+          fetchAllPages<Vacuna>(`${import.meta.env.VITE_API_URL}/medical-records/vacunas/`),
         ]);
 
         setCitas(citasData);
@@ -109,17 +102,7 @@ export default function Reportes() {
 
   const handleExportReport = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No hay token disponible');
-        return;
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/reports/generar-reporte-pdf/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/reports/generar-reporte-pdf/`);
 
       if (!response.ok) {
         throw new Error('Error al generar el reporte');

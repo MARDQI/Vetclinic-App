@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, LogOut, Plus, X, Edit, Trash2, Mail, PawPrint } from 'lucide-react';
+import { authenticatedFetch, clearTokens } from '../utils/auth';
 
 // Ajustamos el tipo User para que coincida con el serializador
 type User = {
@@ -50,12 +51,7 @@ export default function Admin() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/accounts/users/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/accounts/users/`);
 
       if (response.ok) {
         const data = await response.json();
@@ -73,10 +69,8 @@ export default function Admin() {
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/accounts/users/${id}/`, {
+        const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/accounts/users/${id}/`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Token ${token}` },
         });
         if (response.status === 204) {
           setUsers(users.filter(user => user.id !== id));
@@ -174,12 +168,10 @@ export default function Admin() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(body),
       });
@@ -197,7 +189,7 @@ export default function Admin() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    clearTokens();
     window.location.reload();
   };
 

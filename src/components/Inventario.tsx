@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, AlertTriangle, Package, CreditCard as Edit, Trash2, X } from 'lucide-react';
 import { ArticuloInventario } from '../types';
+import { authenticatedFetch } from '../utils/auth';
 
 export default function Inventario() {
   const [inventario, setInventario] = useState<ArticuloInventario[]>([]);
@@ -21,12 +22,7 @@ export default function Inventario() {
 
   const fetchInventario = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/`);
       const data = await response.json();
       setInventario(data.results);
     } catch (error) {
@@ -86,12 +82,10 @@ export default function Inventario() {
     const method = selectedArticulo ? 'PUT' : 'POST';
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify({
           ...formData,
@@ -115,12 +109,8 @@ export default function Inventario() {
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este artículo?')) {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/${id}/`, {
+        const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL}/inventory/articulos-inventario/${id}/`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Token ${token}`,
-          },
         });
 
         if (response.ok) {

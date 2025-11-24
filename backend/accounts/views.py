@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Usuario
 from .serializers import UsuarioSerializer
 from .permissions import IsSystemAdmin
@@ -58,10 +58,18 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 pass
 
         if user:
-            token, created = Token.objects.get_or_create(user=user)
+            # Generar tokens JWT
+            refresh = RefreshToken.for_user(user)
+            
+            # Agregar claims personalizados al token
+            refresh['rol'] = user.rol
+            refresh['email'] = user.email
+            refresh['nombre'] = f"{user.first_name} {user.last_name}".strip()
+            
             serializer = self.get_serializer(user)
             return Response({
-                'token': token.key,
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
                 'user': {
                     'id': user.id,
                     'username': user.username,

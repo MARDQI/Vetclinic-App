@@ -1,4 +1,465 @@
-# Proyecto Vetclinic-App: Guía de Estudio para Desarrolladores Web
+# Vetclinic-App: Sistema de Gestión para Clínicas Veterinarias
+
+Sistema completo de gestión para clínicas veterinarias con backend Django REST Framework y frontend React + TypeScript.
+
+## 📋 Tabla de Contenidos
+
+- [Instalación y Configuración](#instalación-y-configuración)
+  - [Requisitos Previos](#requisitos-previos)
+  - [Instalación en Linux](#instalación-en-linux)
+  - [Instalación en Windows](#instalación-en-windows)
+  - [Instalación en macOS](#instalación-en-macos)
+  - [Configuración Inicial](#configuración-inicial)
+  - [Ejecución del Proyecto](#ejecución-del-proyecto)
+- [Características de Seguridad](#características-de-seguridad)
+- [Guía de Desarrollo](#guía-de-desarrollo)
+
+---
+
+## 🚀 Instalación y Configuración
+
+### Requisitos Previos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- **Python 3.10+** - [Descargar Python](https://www.python.org/downloads/)
+- **Node.js 18+** - [Descargar Node.js](https://nodejs.org/)
+- **PostgreSQL 14+** - [Descargar PostgreSQL](https://www.postgresql.org/download/)
+- **Git** - [Descargar Git](https://git-scm.com/downloads/)
+
+---
+
+### Instalación en Linux
+
+#### 1. Clonar el Repositorio
+
+```bash
+# Clonar el proyecto desde GitHub
+git clone https://github.com/MARDQI/Vetclinic-App.git
+cd Vetclinic-App
+```
+
+#### 2. Instalar Dependencias del Sistema
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv postgresql postgresql-contrib nodejs npm git
+```
+
+**Fedora/RHEL:**
+```bash
+sudo dnf install python3 python3-pip postgresql-server postgresql-contrib nodejs npm git
+sudo postgresql-setup --initdb
+sudo systemctl start postgresql
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S python python-pip postgresql nodejs npm git
+sudo systemctl start postgresql
+```
+
+#### 3. Configurar PostgreSQL
+
+```bash
+# Acceder a PostgreSQL
+sudo -u postgres psql
+
+# Crear base de datos y usuario
+CREATE DATABASE vetclinic_db;
+CREATE USER vetclinic_user WITH PASSWORD 'tu_contraseña_segura';
+ALTER ROLE vetclinic_user SET client_encoding TO 'utf8';
+ALTER ROLE vetclinic_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE vetclinic_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE vetclinic_db TO vetclinic_user;
+\q
+```
+
+#### 4. Configurar el Backend
+
+```bash
+# Ir al directorio backend
+cd backend
+
+# Crear entorno virtual
+python3 -m venv venv
+
+# Activar entorno virtual
+source venv/bin/activate
+
+# Instalar dependencias
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Crear archivo .env
+cat > .env << EOF
+SECRET_KEY='tu-clave-secreta-super-segura-cambiar-en-produccion'
+DEBUG=True
+DATABASE_NAME=vetclinic_db
+DATABASE_USER=vetclinic_user
+DATABASE_PASSWORD=tu_contraseña_segura
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+EOF
+
+# Ejecutar migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Crear superusuario
+python manage.py createsuperuser
+```
+
+#### 5. Configurar el Frontend
+
+```bash
+# Volver al directorio raíz y entrar a frontend
+cd ..
+
+# Instalar dependencias
+npm install
+
+# Crear archivo .env
+cat > .env << EOF
+VITE_API_URL=http://localhost:8000/api
+EOF
+```
+
+---
+
+### Instalación en Windows
+
+#### 1. Clonar el Repositorio
+
+```powershell
+# Abrir PowerShell o CMD
+git clone https://github.com/MARDQI/Vetclinic-App.git
+cd Vetclinic-App
+```
+
+#### 2. Instalar PostgreSQL
+
+1. Descargar el instalador desde [postgresql.org](https://www.postgresql.org/download/windows/)
+2. Ejecutar el instalador y seguir las instrucciones
+3. Recordar la contraseña del usuario `postgres`
+4. Añadir PostgreSQL al PATH del sistema
+
+#### 3. Configurar PostgreSQL
+
+```powershell
+# Abrir pgAdmin o ejecutar en cmd:
+psql -U postgres
+
+# En el prompt de PostgreSQL:
+CREATE DATABASE vetclinic_db;
+CREATE USER vetclinic_user WITH PASSWORD 'tu_contraseña_segura';
+GRANT ALL PRIVILEGES ON DATABASE vetclinic_db TO vetclinic_user;
+\q
+```
+
+#### 4. Configurar el Backend
+
+```powershell
+# Ir al directorio backend
+cd backend
+
+# Crear entorno virtual
+python -m venv venv
+
+# Activar entorno virtual
+.\venv\Scripts\activate
+
+# Instalar dependencias
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Crear archivo .env manualmente o con:
+echo SECRET_KEY='tu-clave-secreta-super-segura' > .env
+echo DEBUG=True >> .env
+echo DATABASE_NAME=vetclinic_db >> .env
+echo DATABASE_USER=vetclinic_user >> .env
+echo DATABASE_PASSWORD=tu_contraseña_segura >> .env
+echo DATABASE_HOST=localhost >> .env
+echo DATABASE_PORT=5432 >> .env
+
+# Ejecutar migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Crear superusuario
+python manage.py createsuperuser
+```
+
+#### 5. Configurar el Frontend
+
+```powershell
+# Volver al directorio raíz
+cd ..
+
+# Instalar dependencias
+npm install
+
+# Crear archivo .env
+echo VITE_API_URL=http://localhost:8000/api > .env
+```
+
+---
+
+### Instalación en macOS
+
+#### 1. Clonar el Repositorio
+
+```bash
+git clone https://github.com/MARDQI/Vetclinic-App.git
+cd Vetclinic-App
+```
+
+#### 2. Instalar Homebrew (si no está instalado)
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+#### 3. Instalar Dependencias
+
+```bash
+# Instalar Python, PostgreSQL y Node.js
+brew install python@3.11 postgresql@14 node
+brew services start postgresql@14
+```
+
+#### 4. Configurar PostgreSQL
+
+```bash
+# Inicializar PostgreSQL (si es primera vez)
+initdb /usr/local/var/postgres
+
+# Crear base de datos y usuario
+psql postgres
+
+# En el prompt de PostgreSQL:
+CREATE DATABASE vetclinic_db;
+CREATE USER vetclinic_user WITH PASSWORD 'tu_contraseña_segura';
+GRANT ALL PRIVILEGES ON DATABASE vetclinic_db TO vetclinic_user;
+\q
+```
+
+#### 5. Configurar el Backend
+
+```bash
+# Ir al directorio backend
+cd backend
+
+# Crear entorno virtual
+python3 -m venv venv
+
+# Activar entorno virtual
+source venv/bin/activate
+
+# Instalar dependencias
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Crear archivo .env
+cat > .env << EOF
+SECRET_KEY='tu-clave-secreta-super-segura-cambiar-en-produccion'
+DEBUG=True
+DATABASE_NAME=vetclinic_db
+DATABASE_USER=vetclinic_user
+DATABASE_PASSWORD=tu_contraseña_segura
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+EOF
+
+# Ejecutar migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Crear superusuario
+python manage.py createsuperuser
+```
+
+#### 6. Configurar el Frontend
+
+```bash
+# Volver al directorio raíz
+cd ..
+
+# Instalar dependencias
+npm install
+
+# Crear archivo .env
+cat > .env << EOF
+VITE_API_URL=http://localhost:8000/api
+EOF
+```
+
+---
+
+### Configuración Inicial
+
+#### Crear Usuarios de Prueba
+
+```bash
+# Activar entorno virtual (si no está activado)
+cd backend
+source venv/bin/activate  # Linux/macOS
+# o
+.\venv\Scripts\activate  # Windows
+
+# Crear usuarios desde el shell de Django
+python manage.py shell
+
+# En el shell de Python:
+from accounts.models import Usuario
+
+# Crear veterinario
+Usuario.objects.create_user(
+    username='vet1',
+    email='veterinario@vetclinic.com',
+    password='Vet12345!',
+    first_name='Juan',
+    last_name='Pérez',
+    rol='VETERINARIO',
+    especialidad='Medicina General'
+)
+
+# Crear recepcionista
+Usuario.objects.create_user(
+    username='recep1',
+    email='recepcion@vetclinic.com',
+    password='Recep12345!',
+    first_name='María',
+    last_name='García',
+    rol='RECEPCIONISTA'
+)
+
+# Crear administrador
+Usuario.objects.create_user(
+    username='admin1',
+    email='admin@vetclinic.com',
+    password='Admin12345!',
+    first_name='Carlos',
+    last_name='López',
+    rol='ADMINISTRADOR'
+)
+
+# Crear admin del sistema
+Usuario.objects.create_superuser(
+    username='sysadmin',
+    email='sysadmin@vetclinic.com',
+    password='Sys12345!',
+    first_name='Admin',
+    last_name='Sistema',
+    rol='SYSTEM_ADMIN'
+)
+
+exit()
+```
+
+---
+
+### Ejecución del Proyecto
+
+#### Iniciar el Backend (Django)
+
+```bash
+# En el directorio backend con el entorno virtual activado
+cd backend
+source venv/bin/activate  # Linux/macOS
+# o
+.\venv\Scripts\activate  # Windows
+
+python manage.py runserver
+```
+
+El backend estará disponible en: `http://localhost:8000`
+Panel de administración: `http://localhost:8000/admin`
+
+#### Iniciar el Frontend (React)
+
+```bash
+# En el directorio raíz del proyecto (nueva terminal)
+npm run dev
+```
+
+El frontend estará disponible en: `http://localhost:5173`
+
+---
+
+## 🔒 Características de Seguridad
+
+Este proyecto implementa múltiples capas de seguridad:
+
+### 1. Autenticación JWT (JSON Web Tokens)
+
+- **Access Tokens**: Duración de 1 hora
+- **Refresh Tokens**: Duración de 7 días con rotación automática
+- **Blacklisting**: Tokens revocados después de la rotación
+- **Almacenamiento seguro**: Tokens en localStorage del navegador
+
+### 2. Validación de Contraseñas
+
+Las contraseñas deben cumplir:
+- Mínimo 8 caracteres
+- Al menos una letra mayúscula
+- Al menos una letra minúscula
+- Al menos un número
+- Al menos un carácter especial (!@#$%^&*(),.?":{}|<>)
+
+### 3. Protección contra Fuerza Bruta
+
+- **Bloqueo temporal**: Después de 3 intentos fallidos
+- **Duración del bloqueo**: 10 segundos
+- **Contador visual**: Muestra segundos restantes en la UI
+- **Implementación**: Django cache system
+
+### 4. Auditoría de Logs
+
+Sistema completo de registro de eventos:
+
+**Eventos registrados:**
+- Inicios de sesión exitosos
+- Intentos de login fallidos
+- Cierres de sesión
+- Operaciones CRUD (Create, Read, Update, Delete)
+
+**Información capturada:**
+- Usuario que realiza la acción
+- Timestamp exacto
+- Dirección IP
+- User agent (navegador/dispositivo)
+- Método HTTP y ruta
+- Resultado (éxito/fallo)
+
+**Acceso a logs:**
+- Solo disponible para usuarios SYSTEM_ADMIN
+- Panel web con filtros avanzados
+- Filtrado por acción, usuario y fechas
+- Paginación automática
+
+### 5. Permisos por Rol
+
+Cuatro niveles de acceso:
+
+| Rol | Permisos |
+|-----|----------|
+| **SYSTEM_ADMIN** | Acceso total + gestión de usuarios + logs de auditoría |
+| **ADMINISTRADOR** | Dashboard, inventario, reportes |
+| **VETERINARIO** | Dashboard, mascotas, registros médicos |
+| **RECEPCIONISTA** | Dashboard, citas, clientes, mascotas |
+
+### 6. Optimizaciones de Rendimiento
+
+- **Select Related**: Reduce consultas N+1 en relaciones ForeignKey
+- **Prefetch Related**: Optimiza consultas de relaciones Many-to-Many
+- **Paginación**: 50 elementos por página en todas las listas
+- **Cache**: Sistema de cache de Django para bloqueos de login
+
+---
+
+## 📚 Guía de Desarrollo
 
 ## Sumario
 

@@ -194,9 +194,19 @@ export default function Admin() {
     }
   };
 
-  const handleLogout = () => {
-    clearTokens();
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      // Llamar al endpoint de logout para registrar en auditoría
+      await authenticatedFetch(`${import.meta.env.VITE_API_URL}/accounts/users/logout/`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      // Limpiar tokens y recargar independientemente del resultado
+      clearTokens();
+      window.location.reload();
+    }
   };
 
   const filteredUsers = users.filter(user => {

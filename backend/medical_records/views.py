@@ -1,11 +1,13 @@
 from rest_framework import viewsets, serializers, status
 from rest_framework.response import Response
+from accounts.permissions import CanManageMedicalRecords
 from .models import RegistroMedico, Vacuna
 from .serializers import RegistroMedicoSerializer, VacunaSerializer
 
 class RegistroMedicoViewSet(viewsets.ModelViewSet):
     queryset = RegistroMedico.objects.all()
     serializer_class = RegistroMedicoSerializer
+    permission_classes = [CanManageMedicalRecords]
 
     def get_queryset(self):
         """
@@ -18,8 +20,9 @@ class RegistroMedicoViewSet(viewsets.ModelViewSet):
         return queryset
 
 class VacunaViewSet(viewsets.ModelViewSet):
-    queryset = Vacuna.objects.select_related('registro_medico', 'registro_medico__mascota').all()
+    queryset = Vacuna.objects.select_related('mascota').all()
     serializer_class = VacunaSerializer
+    permission_classes = [CanManageMedicalRecords]
 
     def create(self, request, *args, **kwargs):
         try:

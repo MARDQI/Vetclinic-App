@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Menu, X, Calendar, Users, PawPrint, FileText, Package, BarChart3, Home, LogOut } from 'lucide-react';
-import { clearTokens } from '../utils/auth';
+import { clearTokens, authenticatedFetch } from '../utils/auth';
 
 interface LayoutProps {
   children: ReactNode;
@@ -71,9 +71,19 @@ export default function Layout({ children, currentPage, onNavigate, userRole }: 
               <p className="text-xs text-gray-500">{userRole || 'Usuario'}</p>
             </div>
             <button
-              onClick={() => {
-                clearTokens();
-                onNavigate('login');
+              onClick={async () => {
+                try {
+                  // Llamar al endpoint de logout para registrar en auditoría
+                  await authenticatedFetch(`${import.meta.env.VITE_API_URL}/accounts/users/logout/`, {
+                    method: 'POST',
+                  });
+                } catch (error) {
+                  console.error('Error al cerrar sesión:', error);
+                } finally {
+                  // Limpiar tokens y navegar independientemente del resultado
+                  clearTokens();
+                  onNavigate('login');
+                }
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               title="Cerrar Sesión"

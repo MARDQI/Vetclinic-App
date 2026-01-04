@@ -23,7 +23,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         """
         if self.action == 'login':
             permission_classes = [AllowAny]
-        elif self.action in ['list', 'retrieve']:
+        elif self.action in ['list', 'retrieve', 'logout']:
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsAuthenticated, IsSystemAdmin]

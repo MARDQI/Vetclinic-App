@@ -345,10 +345,17 @@ export default function RegistrosMedicos() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    // Para fechas sin hora (YYYY-MM-DD), agregarlas como fecha local
+    // Para evitar problemas con zonas horarias
+    const date = dateString.includes('T') 
+      ? new Date(dateString) 
+      : new Date(dateString + 'T00:00:00');
+    
+    return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: 'UTC'  // Usar UTC para fechas sin hora
     });
   };
 

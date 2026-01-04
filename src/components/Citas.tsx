@@ -33,6 +33,7 @@ export default function Citas() {
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [showClientesList, setShowClientesList] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [scheduleWarning, setScheduleWarning] = useState('');
 
   // --- VALIDACIONES ---
   // Valida que la fecha de la cita no sea en el pasado
@@ -44,6 +45,42 @@ export default function Citas() {
     maxDate.setFullYear(maxDate.getFullYear() + 1);
     ahora.setSeconds(0, 0); // Ignorar segundos para una comparación más precisa
     return fechaCita >= ahora && fechaCita <= maxDate;
+  };
+
+  // Verifica si hay conflictos de horario con otras citas del veterinario
+  const checkScheduleConflict = (veterinarioId: string, fechaProgramada: string, citaActualId?: number) => {
+    if (!veterinarioId || !fechaProgramada) {
+      setScheduleWarning('');
+      return false;
+    }
+
+    const selectedDate = new Date(fechaProgramada);
+    const buffer = 30 * 60 * 1000; // 30 minutos en milisegundos
+
+    const conflictingCita = citas.find(cita => {
+      // Excluir la cita actual si estamos editando
+      if (citaActualId && cita.id === citaActualId) return false;
+      
+      // Solo verificar citas del mismo veterinario que no estén canceladas
+      if (cita.veterinario !== parseInt(veterinarioId) || cita.estado === AppointmentStatus.CANCELADA) {
+        return false;
+      }
+
+      const citaDate = new Date(cita.fecha_programada);
+      const timeDiff = Math.abs(selectedDate.getTime() - citaDate.getTime());
+
+      return timeDiff < buffer;
+    });
+
+    if (conflictingCita) {
+      const conflictDate = new Date(conflictingCita.fecha_programada);
+      const timeStr = conflictDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      setScheduleWarning(`⚠️ Hay una cita programada a las ${timeStr}. Se requiere al menos 30 minutos de diferencia.`);
+      return true;
+    }
+
+    setScheduleWarning('');
+    return false;
   };
 
   // --- EFECTOS ---
@@ -205,6 +242,8 @@ export default function Citas() {
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedCita(null);
+    setScheduleWarning('');
+    setFormError('');
   };
 
   // --- MANEJO DEL FORMULARIO ---
@@ -280,7 +319,9 @@ export default function Citas() {
         handleCloseModal();
       } else {
         const errorData = await response.json();
-        setFormError(errorData.detail || 'Error al guardar la cita.');
+        // Extraer el mensaje de error limpio
+        const errorMessage = errorData.error || errorData.detail || 'Error al guardar la cita.';
+        setFormError(errorMessage);
         console.error('Error saving cita:', errorData);
       }
     } catch (error) {
@@ -619,7 +660,13 @@ export default function Citas() {
                 </label>
                 <select
                   value={formData.veterinario}
-                  onChange={(e) => setFormData({ ...formData, veterinario: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, veterinario: e.target.value });
+                    // Verificar conflictos al cambiar de veterinario
+                    if (formData.fecha_programada) {
+                      checkScheduleConflict(e.target.value, formData.fecha_programada, selectedCita?.id);
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   required
                 >
@@ -660,12 +707,19 @@ export default function Citas() {
                     } else {
                       setFormError('');
                     }
+                    // Verificar conflictos de horario
+                    if (formData.veterinario && fecha) {
+                      checkScheduleConflict(formData.veterinario, fecha, selectedCita?.id);
+                    }
                   }}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 ${
-                    formError.includes('fecha') ? 'border-red-500' : 'border-gray-300'
+                    formError.includes('fecha') || scheduleWarning ? 'border-orange-500' : 'border-gray-300'
                   }`}
                   required
                 />
+                {scheduleWarning && (
+                  <p className="mt-1 text-sm text-orange-600">{scheduleWarning}</p>
+                )}
               </div>
 
               <div>
